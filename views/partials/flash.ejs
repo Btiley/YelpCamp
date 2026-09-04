@@ -1,0 +1,19 @@
+<!-- Check if success is filled before displaying -->
+<!-- We check if success has length as it will return empty string -->
+<% if(success && success.length){%>
+<div class="alert alert-success" role="alert">
+    <%= success %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+
+    </button>
+</div>
+<% } %>
+
+<% if(error && error.length){%>
+<div class="alert alert-danger" role="alert">
+    <%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+
+    </button>
+</div>
+<% } %>

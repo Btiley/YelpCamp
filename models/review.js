@@ -5,7 +5,11 @@ const Schema = mongoose.Schema;
 // We will store each review in a array on campground module
 const reviewSchema = new Schema({
     rating: Number,
-    body: String
+    body: String,
+    author: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
+    }
 });
 
 // By using Review, this creates reviews database in mongo

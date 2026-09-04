@@ -3,15 +3,29 @@ const path = require('path');
 const mongoose = require('mongoose');
 // This a version of the ejs engine
 const ejsMate = require('ejs-mate');
+// Fetches express so we can use flash to display tempt messages
+const session = require('express-session');
+const flash = require('connect-flash')
 // Fetches JOI schema to validate serverside inputs
 const {campgroundSchema,reviewSchema} = require('./schemas.js')
-const catchAsync = require('./utils/catchAsync')
 const ExpressError = require('./utils/ExpressError')
 const methodOverride = require('method-override');
+
+// Authentication
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
 
 // Importing Models
 const Campground = require('./models/campground');
 const Review = require('./models/review');
+const User = require('./models/user');
+
+// Brining in Routes from router folder
+
+const userRoutes = require('./routes/users')
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
+
 
 
 
@@ -34,133 +48,76 @@ app.use(express.urlencoded({ extended: true }));
 // Uses the ejsmate engine instead of standard
 app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'))
+app.set('views', path.join(__dirname, 'views'));
 
-app.use(express.urlencoded({ extended: true }))
-app.use(methodOverride('_method'))
+app.use(express.urlencoded({ extended: true }));
+app.use(methodOverride('_method'));
+// We get express to serve public directory
+// path allows us to serve from the 'public' directory
+app.use(express.static(path.join(__dirname,'public')));
 
-// Uses JOI schema to check through request ensuring we have campground object
-// and each value matches what we expect
-const validateCampground = (req,res,next) => {
-
-    // Throws an error if error is in result, throw breaks the flow
-    const{error} = campgroundSchema.validate(req.body);
-    if(error){
-        // Result.details is an array, we need to map over it, we add comma if there are multiple.
-        const msg = error.details.map(el => el.message).join(',')
-        throw new ExpressError(msg, 400)  
-    }
-    else{
-        next();
-    }
-}
-
-// Middleware to run review through JOI validation
-
-const validateReview = (req,res,next) => {
-
-    // Throws an error if error is in result, throw breaks the flow
-    // Express passes empty req as undefined, this prevents that issue.
-    const{error} = reviewSchema.validate(req.body || {});
-    if(error){
-        console.log(error);
-        // Result.details is an array, we need to map over it, we add comma if there are multiple.
-        const msg = error.details.map(el => el.message).join(',')
-        throw new ExpressError(msg, 400)  
-    }
-    else{
-        next();
+const sessionConfig = {
+    secret: 'thisshouldbeabettersecret!',
+    resave: false,
+    saveUninitialized: true,
+    // We can set some properties on session cookie
+    cookie: {
+        // http only prevents accessing cookies from client.
+        httpOnly: true,
+        // Date now is current time in millioseconds, a week is in a week
+        // 1000 ms in sec,60 in minute, 60 in hour, 24 in day, 7 days in week
+        // Expiration avoids login from staying forever.
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
+        maxAge: 1000 * 60 * 60 * 24 * 7
     }
 }
+app.use(session(sessionConfig))
+// flash comes after as it dependant on session so logically it would be after
+app.use(flash());
+
+// Authentication
+
+app.use(passport.initialize());
+app.use(passport.session());
+// authenticate is a static method added on to user model using 'local' auth
+passport.use(new LocalStrategy(User.authenticate()));
+
+// How do we store user in the session/remove them.
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
+
+// We set up a local variable to pass any flash info on
+
+app.use((req,res,next) => {
+    // all templates have access to currentUser, depends if we have a 'current user'
+    // console.log(req.session)
+    res.locals.currentUser = req.user;
+    res.locals.success = req.flash('success'); 
+    res.locals.error = req.flash('error');   
+    next();
+})
+
+// This hard codes a fake user. (rather than post request)
+app.get('/fakeUser', async (req,res) => {
+    const user = new User({email:'c3@gmail.com', username: 'colt12'})
+    // Creates new user and saves encrypted password
+    const newUser = await User.register(user,'chicken');
+    res.send(newUser);
+})
 
 
+
+// Route handlers
+app.use('/',userRoutes);
+app.use('/campgrounds',campgroundRoutes);
+app.use('/campgrounds/:id/reviews',reviewRoutes);
 
 
 app.get('/', (req, res) => {
     res.render('home')
 })
 
-app.get('/campgrounds', catchAsync(async (req, res) => {
-    const campgrounds = await Campground.find({});
-    res.render('campgrounds/index', { campgrounds })
-}))
-// Creating Campground
-
-app.get('/campgrounds/new', (req, res) => {
-    res.render('campgrounds/new');
-})
-
-app.post('/campgrounds', validateCampground,catchAsync(async (req, res, next) => {
-    // if(!req.body.campground) throw new ExpressError('Invalid Campground Data',400)
-    const campground = new Campground(req.body.campground);
-    console.log(campground)
-    await campground.save();
-    res.redirect(`/campgrounds/${campground._id}`)
-}))
-
-
-// Retrieving Campground (show.ejs containing our reviews form)
-app.get('/campgrounds/:id', catchAsync(async (req, res) => {
-    const campground = await Campground.findById(req.params.id).populate('reviews');
-    res.render('campgrounds/show', { campground });
-}))
-
-// Updating Campground
-
-app.get('/campgrounds/:id/edit', catchAsync(async (req, res) => {
-    const campground = await Campground.findById(req.params.id)
-    res.render('campgrounds/edit', { campground });
-}))
-
-app.put('/campgrounds/:id', validateCampground, catchAsync(async (req, res) => {
-    const { id } = req.params;
-    const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground })
-    res.redirect(`/campgrounds/${campground._id}`)
-}))
-
-// Deleting Campground
-
-app.delete('/campgrounds/:id', catchAsync(async (req, res) => {
-    const { id } = req.params;
-    await Campground.findByIdAndDelete(id)
-    res.redirect('/campgrounds');
-}))
-
-// Review Routes
-
-// CREATING REVIEW - This is where review form submits
-app.post('/campgrounds/:id/reviews', validateReview, catchAsync(async (req,res) => {
-    const campground = await Campground.findById(req.params.id);
-
-//    We fetch everything stored within the review part of body. (Square brackets in form feed in 
-// Rating and Review text)
-
-
-const review = new Review(req.body.review);
-// We add the review on to the reviews array in campground model as a object id
-// This is verified as working correctly
-   campground.reviews.push(review);
-   await review.save();
-   await campground.save();
-   res.redirect(`/campgrounds/${campground._id}`);
-
-}))
-
-// Delete route (Deleting review for specific campsite)
-// We need to remove from campground model 
-// We need to remove from review model.
-
-app.delete('/campgrounds/:id/reviews/:reviewId', catchAsync(async (req,res) => {
-    const {id,reviewId} = req.params
-    // Pull takes review ID and pulls it out of array thus deleting it from campground model
-    await Campground.findByIdAndUpdate(id, {$pull: {reviews:reviewId}});
-    await Review.findByIdAndDelete(reviewId);
-    res.redirect(`/campgrounds/${id}`);
-}))
-
-
-
-// This ereror occurs if we call a route that does not exist (an express error)
+// This error occurs if we call a route that does not exist (an express error)
 
 app.all('/{*path}', (req,res,next) => {
     next(new ExpressError('Page Not Found', 404))

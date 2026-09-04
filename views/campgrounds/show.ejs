@@ -1,4 +1,5 @@
 <% layout('layouts/boilerplate') %>
+<link rel="stylesheet" type="text/css" href="/stylesheets/stars.css" />
 
 <div class="row">
     <!-- Left side -->
@@ -11,14 +12,20 @@
             </div>
             <ul class="list-group list-group-flush">
                 <li class="list-group-item text-muted"><%=campground.location%></li>
-                <li class="list-group-item text-muted">$<%=campground.price%>/night </li>
+                <li class="list-group-item">$<%=campground.price%>/night </li>
+                <li class="list-group-item">Author: <%=campground.author.username%></li>
             </ul>
+            <!-- These buttons should only show if loggedin user matches author -->
+            <!-- We check if current user exists to avoid an undefined error -->
+            <!-- This protects client side -->
+            <% if(currentUser && campground.author.equals(currentUser._id)) { %>
             <div class="card-body">
                 <a href="/campgrounds/<%=campground._id%>/edit" class="card-link btn btn-primary">Edit</a>
                 <form class="d-inline" action="/campgrounds/<%=campground._id%>?_method=DELETE" method="POST">
                     <button class="btn btn-danger">Delete</button>
                 </form>
             </div>
+            <% } %>
             <div class="card-footer text-muted">
                 2 days ago
             </div>
@@ -27,17 +34,28 @@
     </div>
     <!-- We divide the page into 2 columns (This is right hand side, previously col 6, offset 3) -->
     <div class="col-6">
-        <!-- We insert the review form to allow user to leave review in context of campground -->
-        <!-- rating and body will be nested inside of review when form is submitted-->
+        <!-- We will hide this form to leave a review if not logged in  -->
+        <% if(currentUser) { %>
         <h2>Leave a Review</h2>
         <form action="/campgrounds/<%=campground._id%>/reviews" method="POST" class="mb-3 validated-form" novalidate>
-            <div class="mb-3">
-                <!-- Default review will be 3, there is no need to require (client side) -->
-                <label class="form-label" for="rating">Rating</label>
-                <input class="form-range" type="range" min="1" max="5" name="review[rating]" id="rating">
+            <div>
+                <fieldset class="starability-basic">
+                    <input type="radio" id="no-rate" class="input-no-rate" name="review[rating]" value="0" checked
+                        aria-label="No rating." />
+                    <input type="radio" id="first-rate1" name="review[rating]" value="1" />
+                    <label for="first-rate1" title="Terrible">1 star</label>
+                    <input type="radio" id="first-rate2" name="review[rating]" value="2" />
+                    <label for="first-rate2" title="Not good">2 stars</label>
+                    <input type="radio" id="first-rate3" name="review[rating]" value="3" />
+                    <label for="first-rate3" title="Average">3 stars</label>
+                    <input type="radio" id="first-rate4" name="review[rating]" value="4" />
+                    <label for="first-rate4" title="Very good">4 stars</label>
+                    <input type="radio" id="first-rate5" name="review[rating]" value="5" />
+                    <label for="first-rate5" title="Amazing">5 stars</label>
+                </fieldset>
             </div>
             <div class="mb-3">
-                <label class="form-label" for="body">Review:</label>
+                <label class="form-label" for="body">Review Text:</label>
                 <textarea class="form-control" name="review[body]" id="body" cols="30" rows="3" required></textarea>
                 <div class="valid-feedback">
                     Looks good!
@@ -48,16 +66,22 @@
             </div>
             <button class="btn btn-success">Submit</button>
         </form>
+        <% } %>
         <% for(let review of campground.reviews) { %>
         <!-- Adds border around each review -->
         <div class="card mb-3 ">
             <div class="card-body">
-                <h5 class="card-title">Rating: <%= review.rating %></h5>
+                <h5 class="card-title"><%= review.author.username%></h5>
+                <!-- Note: The rated psrt of review is used by screen readers, wont register anything -->
+                <p class="card-title starability-result" data-rating=<%=review.rating%>>Rated: <%=review.rating%>
+                    stars </p>
+
                 <p class="card-text">Review: <%= review.body %></p>
-                <!-- Creating a delete button -->
+                <% if(currentUser && review.author.equals(currentUser._id)) { %>
                 <form action="/campgrounds/<%=campground._id%>/reviews/<%=review._id%>?_method=DELETE" method="POST">
                     <button class="btn btn-sm btn-danger">Delete</button>
                 </form>
+                <% } %>
             </div>
         </div>
         <% } %>
