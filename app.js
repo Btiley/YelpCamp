@@ -1,3 +1,11 @@
+// We run in dev mode, prod is only once we deploy
+// Adds into process.env in dev, in production we don't do this
+if(process.env.NODE_ENV !== "production") {
+    require('dotenv').config();
+}
+
+console.log(process.env.SECRET);
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');

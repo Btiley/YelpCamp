@@ -5,7 +5,7 @@
     <div class="col-6 offset-3">
         <!-- CLIENT side Validation (by requiring each part of form) -->
         <!-- We use novalidate to override browser default -->
-        <form action="/campgrounds" method="POST" novalidate class="validated-form">
+        <form action="/campgrounds" method="POST" novalidate class="validated-form" enctype="multipart/form-data">
             <div class="mb-3">
                 <label class="form-label" for="title">Title</label>
                 <input class="form-control" type="text" id="title" name="campground[title]" required>
@@ -16,6 +16,7 @@
                     Please add a campground name
                 </div>
             </div>
+
             <div class="mb-3">
                 <label class="form-label" for="location">Location</label>
                 <input class="form-control" type="text" id="location" name="campground[location]" required>
@@ -26,7 +27,9 @@
                     Please add a location
                 </div>
             </div>
-            <div class="mb-3">
+            <!-- gives a choose file option -->
+            <input type="file" name="image" id="image" multiple>
+            <!-- <div class="mb-3">
                 <label class="form-label" for="image">Image Url</label>
                 <input class="form-control" type="text" id="image" name="campground[image]" required>
                 <div class="valid-feedback">
@@ -35,7 +38,7 @@
                 <div class="invalid-feedback">
                     Please add a image.
                 </div>
-            </div>
+            </div> -->
             <div class="mb-3">
                 <label class="form-label" for="price">Price</label>
                 <div class="input-group">
