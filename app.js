@@ -1,3 +1,11 @@
+// requires dotenv if not in production (this is needed for using cloudinary)
+if(process.env.NODE_ENV !== "production") {
+    require('dotenv').config();
+    // process.env.VARNAME - accessing env vars
+    // console.log(process.env.CLOUDINARY_CLOUD_NAME,process.env.CLOUDINARY_KEY,process.env.CLOUDINARY_SECRET)
+}
+
+
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
