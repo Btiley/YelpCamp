@@ -2,22 +2,17 @@ const express=require('express');
 const router = express.Router();
 const campgrounds = require('../controllers/campgrounds');
 const catchAsync = require('../utils/catchAsync');
-const{isLoggedIn,validateCampground,isAuthor} = require('../middleware.js');
 const methodOverride = require('method-override');
+const{isLoggedIn,validateCampground,isAuthor} = require('../middleware.js');
 const Campground = require('../models/campground');
-// Allows us to do multi part
-const multer  = require('multer');
-const upload = multer({ dest: 'uploads/' });
+
 
 router.route('/')
 // Show all campgrounds 
 .get(campgrounds.index)
 // (C)reate New Campground
-// .post(isLoggedIn, validateCampground,campgrounds.createCampground)
-.post(upload.array('image'),(req,res) => {
-    console.log(req.body,req.files);
-    res.send("YOU MAY PARSE!")
-})
+.post(isLoggedIn, validateCampground,campgrounds.createCampground)
+
 
 // New Campground Form
 router.get('/new',isLoggedIn,campgrounds.renderNewForm);
