@@ -6,26 +6,29 @@ const methodOverride = require('method-override');
 const{isLoggedIn,validateCampground,isAuthor} = require('../middleware.js');
 const Campground = require('../models/campground');
 
+// Multer Routes (for parsing files)
+const multer  = require('multer')
+// This is where multer will store images that are parsed to files
+const upload = multer({ dest: 'uploads/' })
+
 
 router.route('/')
-// Show all campgrounds 
-.get(campgrounds.index)
-// (C)reate New Campground
-.post(isLoggedIn, validateCampground,campgrounds.createCampground)
+    .get(campgrounds.index)
+    // We are temporarily commenting this out to check outputs
+    // .post(isLoggedIn, validateCampground,campgrounds.createCampground)
+    // Middleware will add our 'image' file to req.files and rest to req.body
+    .post(upload.array('image'),(req,res) => {
+        console.log(req.body,req.files);
+        res.send("Parsed")
+    })
 
-
-// New Campground Form
 router.get('/new',isLoggedIn,campgrounds.renderNewForm);
 
 router.route('/:id')
-// (R)etrieve Campground
-.get(campgrounds.retrieveCampground)
-// (U)pdate Campground 
-.put(isLoggedIn,isAuthor,validateCampground,campgrounds.updateCampground)
-// (D)elete Campground
-.delete(isLoggedIn,isAuthor, campgrounds.deleteCampground)
+    .get(campgrounds.retrieveCampground)
+    .put(isLoggedIn,isAuthor,validateCampground,campgrounds.updateCampground)
+    .delete(isLoggedIn,isAuthor, campgrounds.deleteCampground)
 
-// New User Form
 router.get('/:id/edit',isLoggedIn, isAuthor, campgrounds.renderUpdateForm);
 
 module.exports = router;
