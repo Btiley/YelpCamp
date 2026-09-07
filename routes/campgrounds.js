@@ -8,26 +8,24 @@ const Campground = require('../models/campground');
 
 // Multer Routes (for parsing files)
 const multer  = require('multer')
+// Node will auytomatically look for index js
+const {storage} = require('../cloudinary');
 // This is where multer will store images that are parsed to files
-const upload = multer({ dest: 'uploads/' })
+const upload = multer({ storage })
 
 
 router.route('/')
     .get(campgrounds.index)
-    // We are temporarily commenting this out to check outputs
-    // .post(isLoggedIn, validateCampground,campgrounds.createCampground)
-    // Middleware will add our 'image' file to req.files and rest to req.body
-    .post(upload.array('image'),(req,res) => {
-        console.log(req.body,req.files);
-        res.send("Parsed")
-    })
+    // We will upload images before we validate due to how malter works, to be fixed later
+    .post(isLoggedIn, upload.array('image'),validateCampground,campgrounds.createCampground)
+   
 
 router.get('/new',isLoggedIn,campgrounds.renderNewForm);
 
 router.route('/:id')
     .get(campgrounds.retrieveCampground)
-    .put(isLoggedIn,isAuthor,validateCampground,campgrounds.updateCampground)
-    .delete(isLoggedIn,isAuthor, campgrounds.deleteCampground)
+    .put(isLoggedIn,isAuthor, upload.array('image'), validateCampground,campgrounds.updateCampground)
+    .delete(isLoggedIn,isAuthor,campgrounds.deleteCampground)
 
 router.get('/:id/edit',isLoggedIn, isAuthor, campgrounds.renderUpdateForm);
 

@@ -15,9 +15,11 @@ module.exports.renderNewForm = (req, res) => {
 // CREATE
 module.exports.createCampground = catchAsync(async (req, res, next) => {
     const campground = new Campground(req.body.campground);
+    campground.images = req.files.map(f => ({url: f.path, filename: f.filename}));
     // Adding user onto campground
     campground.author = req.user._id;
     await campground.save();
+    // console.log('Campground:',campground);
     req.flash('success', 'Successfully made new campground!')
     res.redirect(`/campgrounds/${campground._id}`)
 })
@@ -51,7 +53,13 @@ module.exports.renderUpdateForm = catchAsync(async (req, res) => {
 // UPDATE
 module.exports.updateCampground = catchAsync(async (req, res) => {
     const { id } = req.params;
+    // Can try combine img uploads with find and update
     const campground = await Campground.findByIdAndUpdate(id, { ...req.body.campground })
+    // We need to convert the above out of array format, ... spread operator allows us to input them individually
+    const imgs = req.files.map(f => ({url: f.path, filename: f.filename}))
+    campground.images.push(...imgs);
+    
+    await campground.save()
     req.flash('success', 'Successfully updated campground!')
     res.redirect(`/campgrounds/${campground._id}`)    
 })
