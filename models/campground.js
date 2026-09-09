@@ -8,13 +8,36 @@ const ImageSchema = new Schema({
     filename: String
 });
 
+// We can set up a virtual parameter on every schema
+// Virtual does not need to be stored on DB, we are manipulating what we already have in db
+ImageSchema.virtual('thumbnail').get(function () {
+    return this.url.replace('/upload', '/upload/w_200,h_200/')
+    console.log("url")
+})
+
+// Prevent resize of carousel
+ImageSchema.virtual('cardImage').get(function () {
+    return this.url.replace('/upload', '/upload/ar_4:3,c_crop')
+})
+
 const CampgroundSchema = new Schema({
     title: String,
     images: [ImageSchema],
     price: Number,
     description: String,
     location: String,
-    // We reference the author's associated with this campground (similar to reviews)
+    // This geometry is the Lat/Long that we get from map tiler
+    geometry: {
+        type: {
+            type: String,
+            enum: ['Point'],
+            required: true
+        },
+        coordinates: {
+            type: [Number],
+            required: true
+        }
+    },
     author: {
         type: Schema.Types.ObjectId,
         ref: 'User'
@@ -33,7 +56,7 @@ const CampgroundSchema = new Schema({
 // When campground is deleted it is passed into thjis middleware.
 
 CampgroundSchema.post('findOneAndDelete', async function (doc) {
-    if(doc){
+    if (doc) {
         // Finds any ID in the recently deleted campground and deletes
         await Review.deleteMany({
             _id: {

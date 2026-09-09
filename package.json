@@ -11,6 +11,7 @@
   },
   "keywords": [],
   "dependencies": {
+    "@maptiler/client": "^2.5.0",
     "axios": "^1.19.0",
     "cloudinary": "^1.41.3",
     "connect-flash": "^0.1.1",
