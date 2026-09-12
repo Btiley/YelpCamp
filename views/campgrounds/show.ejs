@@ -52,6 +52,7 @@
     </div>
     <!-- We divide the page into 2 columns (This is right hand side, previously col 6, offset 3) -->
     <div class="col-6">
+        <div id="map" style="width: 100%; height: 300px;"></div>
         <% if(currentUser){ %>
         <h2>Leave a Review</h2>
         <form action="/campgrounds/<%=campground._id%>/reviews" method="POST" class="mb-3 validated-form" novalidate>
@@ -102,3 +103,11 @@
         <% } %>
     </div>
 </div>
+
+<%-"<script>"%>
+const maptilerApiKey = '<%- process.env.MAPTILER_API_KEY %>';
+const campground = <%- JSON.stringify(campground) %>;
+<%-"</script>"%>
+
+<!-- Runs map tiler code to render map on page -->
+<script src="/javascripts/showPageMap.js"></script>

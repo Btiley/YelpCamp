@@ -19,6 +19,8 @@ ImageSchema.virtual('thumbnail').get(function () {
 ImageSchema.virtual('cardImage').get(function () {
     return this.url.replace('/upload', '/upload/ar_4:3,c_crop')
 })
+// Virtuals convert to JSON
+const opts = { toJSON: { virtuals: true } };
 
 const CampgroundSchema = new Schema({
     title: String,
@@ -50,7 +52,15 @@ const CampgroundSchema = new Schema({
             ref: 'Review'
         }
     ]
-})
+}, opts);
+
+// Calculated based on database, not directly stored.
+CampgroundSchema.virtual('properties.popUpMarkup').get(function () {
+    return `
+    <strong><a href="/campgrounds/${this._id}">${this.title}</a></strong>
+    <p>${this.description.substring(0, 20)}...</p>`
+});
+
 
 // We add our mongoose middleware to delete from reviews db
 // When campground is deleted it is passed into thjis middleware.
