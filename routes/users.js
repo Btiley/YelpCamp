@@ -20,7 +20,6 @@ router.route('/login')
     .post(storeReturnTo,passport.authenticate('local', {failureFlash:true, failureRedirect: '/login'}), users.userLogin)
 
 // Logging out (removing user cookie)
-// Logs out
 router.get('/logout', users.userLogOut)
 
 module.exports = router;

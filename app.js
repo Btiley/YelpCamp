@@ -1,29 +1,37 @@
-// requires dotenv if not in production (this is needed for using cloudinary)
+// retrieves .env folder if not in production environment
 if (process.env.NODE_ENV !== "production") {
     require('dotenv').config({ quiet: true });
 }
 
-
+// Basic core DB and connection functionality
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
+
+// Page/form handlers
 const ejsMate = require('ejs-mate');
-const session = require('express-session');
-const flash = require('connect-flash');
-const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
+// Error handling
+const ExpressError = require('./utils/ExpressError');
+const flash = require('connect-flash');
+// Authentication
+const session = require('express-session');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
+// Security
+const helmet = require('helmet');
+const mongoSanitize = require('express-mongo-sanitize');
 
+// Requiring route logic files
 const userRoutes = require('./routes/users');
 const campgroundRoutes = require('./routes/campgrounds');
 const reviewRoutes = require('./routes/reviews');
 
 
-// DB Connection
+// Mongp Database Connection
 mongoose.set('strictQuery', true);
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp-maptiler');
+mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp');
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -33,20 +41,28 @@ db.once("open", () => {
 
 const app = express();
 
+// Setting up views
 app.engine('ejs', ejsMate)
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
+app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
+app.use(mongoSanitize({
+    replaceWith: '_'
+}))
 
+// Connection to session
 const sessionConfig = {
+    name:'session',
     secret: 'thisshouldbeabettersecret!',
     resave: false,
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
+        // secure: true
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
@@ -54,6 +70,52 @@ const sessionConfig = {
 app.use(session(sessionConfig))
 app.use(flash());
 
+// Header security and allowed content
+app.use(helmet());
+
+const scriptSrcUrls = [
+    "https://stackpath.bootstrapcdn.com/",
+    "https://kit.fontawesome.com/",
+    "https://cdnjs.cloudflare.com/",
+    "https://cdn.jsdelivr.net/",
+    "https://cdn.maptiler.com/"
+];
+const styleSrcUrls = [
+    "https://kit-free.fontawesome.com/",
+    "https://stackpath.bootstrapcdn.com/",
+    "https://fonts.googleapis.com/",
+    "https://use.fontawesome.com/",
+    "https://cdn.jsdelivr.net/",
+    "https://cdn.maptiler.com/"
+];
+const connectSrcUrls = [
+    "https://cdn.jsdelivr.net/",
+    "https://api.maptiler.com/"
+];
+const fontSrcUrls = [];
+app.use(
+    helmet.contentSecurityPolicy({
+        directives: {
+            defaultSrc: [],
+            connectSrc: ["'self'", ...connectSrcUrls],
+            scriptSrc: ["'unsafe-inline'", "'self'", ...scriptSrcUrls],
+            styleSrc: ["'self'", "'unsafe-inline'", ...styleSrcUrls],
+            workerSrc: ["'self'", "blob:"],
+            objectSrc: [],
+            imgSrc: [
+                "'self'",
+                "blob:",
+                "data:",
+                "https://res.cloudinary.com/xynuu4oc/", 
+                "https://images.unsplash.com/",
+                "https://api.maptiler.com/"
+            ],
+            fontSrc: ["'self'", ...fontSrcUrls],
+        },
+    })
+);
+
+// Authentication
 app.use(passport.initialize());
 app.use(passport.session());
 passport.use(new LocalStrategy(User.authenticate()));

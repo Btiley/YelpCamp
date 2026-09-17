@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
-// We fetch passport module
 const passportLocalMongoose = require('passport-local-mongoose');
  
 const UserSchema = new Schema({
@@ -12,10 +11,7 @@ const UserSchema = new Schema({
     }
 });
 
-// We plugin the passport module to help authenticate users
 // Adds username, password, salt onto schema
 UserSchema.plugin(passportLocalMongoose.default); 
-
-// Compiling the model
 
 module.exports = mongoose.model('User', UserSchema);

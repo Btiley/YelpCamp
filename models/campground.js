@@ -1,8 +1,6 @@
 const mongoose = require('mongoose');
 const Review = require('./review');
-// We reference schema alot in relationships, this is a shortcut.
 const Schema = mongoose.Schema;
-
 const ImageSchema = new Schema({
     url: String,
     filename: String
@@ -46,7 +44,6 @@ const CampgroundSchema = new Schema({
 
     },
     reviews: [
-        // Fetches the object ID from review model
         {
             type: Schema.Types.ObjectId,
             ref: 'Review'
@@ -60,10 +57,6 @@ CampgroundSchema.virtual('properties.popUpMarkup').get(function () {
     <strong><a href="/campgrounds/${this._id}">${this.title}</a></strong>
     <p>${this.description.substring(0, 20)}...</p>`
 });
-
-
-// We add our mongoose middleware to delete from reviews db
-// When campground is deleted it is passed into thjis middleware.
 
 CampgroundSchema.post('findOneAndDelete', async function (doc) {
     if (doc) {

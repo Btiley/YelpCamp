@@ -9,13 +9,10 @@ const cities = require('./cities');
 const { places, descriptors } = require('./seedhelpers');
 const Campground = require('../models/campground')
 
-
-
-
 // Connecting to Mongo DB (Strict query is boiler plate to avoid deprication warning)
 mongoose.set('strictQuery', true);
 // mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp');
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp-maptiler');
+mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp');
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -50,9 +47,7 @@ const seedDB = async () => {
         const random1000 = Math.floor(Math.random() * 1000);
         const price = Math.floor(Math.random() * 20) + 10;
         const camp = new Campground({
-            // author: '6a95f370bcc6d2005413362d', - yelpcamp db
-            // below is for maptiler db testing
-            author: '6aa2909c00b1233dabb45e6e',
+            author: '6a95f370bcc6d2005413362d',
             location: `${cities[random1000].city},${cities[random1000].state}`,
             title: `${sample(descriptors)} ${sample(places)}`,
             description: 'Lorem ipsum dolor sit amet consectetur adipisicing elit. Iure, veniam quidem numquam adipisci dolorem quibusdam amet odit totam aperiam necessitatibus itaque nostrum distinctio perferendis quaerat nam quos libero, unde rem!',
@@ -68,28 +63,18 @@ const seedDB = async () => {
 
             images: [
                 {
-                    url: 'https://res.cloudinary.com/xynuu4oc/image/upload/v1788776997/YelpCamp/t9yxzizhujtx8ixhemu5.jpg',
-                    filename: 'YelpCamp/t9yxzizhujtx8ixhemu5'
+                    url: 'https://res.cloudinary.com/xynuu4oc/image/upload/v1789247719/YelpCamp/hlobekoqvk2k0vie3k7p.jpg',
+                    filename: 'hlobekoqvk2k0vie3k7p.jpg'
                 },
                 {
-                    url: 'https://res.cloudinary.com/xynuu4oc/image/upload/v1789040399/YelpCamp/oeobpddalkgis32rprnu.jpg',
-                    filename: 'YelpCamp/oeobpddalkgis32rprnu'
+                    url: 'https://res.cloudinary.com/xynuu4oc/image/upload/v1789247721/YelpCamp/gwta5glk9ctoif2rsflf.jpg',
+                    filename: 'YelpCamp/gwta5glk9ctoif2rsflf'
                 }
             ]
         })
         await camp.save();
     }
 }
-
-// So, instead of this line in your seeds/index.js code:
-
-// image: 'https://source.unsplash.com/collection/483251',
-// Change that line to exactly the line shown below (copy-paste the line below into your code as a replacement):
-
-// image: `https://picsum.photos/400?random=${Math.random()}`,
-
-
-
 
 // We close DB
 

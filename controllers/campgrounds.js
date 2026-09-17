@@ -73,7 +73,6 @@ module.exports.updateCampground = catchAsync(async (req, res) => {
     const { id } = req.params;
 
     const geoData = await maptilerClient.geocoding.forward(req.body.campground.location, { limit: 1 });
-    // console.log(geoData);
 
     if (!geoData.features?.length) {
         req.flash('error', 'Could not geocode that location. Please try again and enter a valid location.');
