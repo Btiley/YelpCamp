@@ -8,6 +8,7 @@ const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
 
+
 // Page/form handlers
 const ejsMate = require('ejs-mate');
 const methodOverride = require('method-override');
@@ -31,7 +32,13 @@ const reviewRoutes = require('./routes/reviews');
 
 // Mongp Database Connection
 mongoose.set('strictQuery', true);
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp');
+
+// connect to prod DB (Mongo Atlas)
+// const prodDB = process.env.MONGODB_URL
+// mongoose.connect(prodDB);
+// connect to dev DB (Mongo Local)
+const devDB = 'mongodb://127.0.0.1:27017/yelp-camp'
+mongoose.connect(devDB);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));

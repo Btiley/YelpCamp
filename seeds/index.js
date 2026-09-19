@@ -11,8 +11,9 @@ const Campground = require('../models/campground')
 
 // Connecting to Mongo DB (Strict query is boiler plate to avoid deprication warning)
 mongoose.set('strictQuery', true);
-// mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp');
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp');
+// const prodDB = process.env.MONGODB_URL
+const devDB = 'mongodb://127.0.0.1:27017/yelp-camp'
+mongoose.connect(devDB);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
