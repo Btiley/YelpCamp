@@ -17,6 +17,9 @@ const ExpressError = require('./utils/ExpressError');
 const flash = require('connect-flash');
 // Authentication
 const session = require('express-session');
+const { MongoStore } = require('connect-mongo');
+const secret = process.env.SECRET || 'thisshouldbeabettersecret!';
+
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
@@ -34,7 +37,7 @@ const reviewRoutes = require('./routes/reviews');
 mongoose.set('strictQuery', true);
 
 // connect to prod DB (Mongo Atlas)
-// const prodDB = process.env.MONGODB_URL
+// const prodDB = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/yelp-camp';
 // mongoose.connect(prodDB);
 // connect to dev DB (Mongo Local)
 const devDB = 'mongodb://127.0.0.1:27017/yelp-camp'
@@ -61,10 +64,26 @@ app.use(mongoSanitize({
     replaceWith: '_'
 }))
 
+// By default this is in memory, we need to redirect it to mongo store in mongo db under 'sessions' collection
+
+const store = MongoStore.create({
+    mongoUrl: devDB,
+    touchAfter: 24 * 60 * 60,
+    crypto: {
+        secret
+    }
+});
+
+store.on("error", function(e) {
+    console.log("SESSION STOREV ERROR", e)
+})
+
 // Connection to session
+
 const sessionConfig = {
+    store,
     name:'session',
-    secret: 'thisshouldbeabettersecret!',
+    secret,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -156,6 +175,7 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render('error', { err })
 });
 
-app.listen(3000, () => {
-    console.log('Serving on port 3000')
+const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+    console.log(`Serving on port ${port}`)
 });
