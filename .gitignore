@@ -1,3 +1,7 @@
+images/
 node_modules/
-uploads/
 .env
+.vscode
+.vercel
+.vercelignore
+
