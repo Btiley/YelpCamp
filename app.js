@@ -36,12 +36,10 @@ const reviewRoutes = require('./routes/reviews');
 // Mongp Database Connection
 mongoose.set('strictQuery', true);
 
-// connect to prod DB (Mongo Atlas)
 // const prodDB = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/yelp-camp';
-// mongoose.connect(prodDB);
-// connect to dev DB (Mongo Local)
-const devDB = 'mongodb://127.0.0.1:27017/yelp-camp'
-mongoose.connect(devDB);
+
+const dbUrl = process.env.MONGODB_URL || 'mongodb://127.0.0.1:27017/yelp-camp';
+mongoose.connect(dbUrl);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
@@ -65,9 +63,11 @@ app.use(mongoSanitize({
 }))
 
 // By default this is in memory, we need to redirect it to mongo store in mongo db under 'sessions' collection
+// We create a mongo db store for session to use instead of memory
+
 
 const store = MongoStore.create({
-    mongoUrl: devDB,
+    mongoUrl: dbUrl,
     touchAfter: 24 * 60 * 60,
     crypto: {
         secret
